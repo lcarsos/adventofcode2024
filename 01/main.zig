@@ -17,8 +17,8 @@ fn parseList(alloc: Allocator, input: []const u8) [2]ArrayList(i32) {
             break :blk 47;
         };
         std.debug.print("look: {any}\n", .{match});
-        first.append(match);
-        second.append(try std.fmt.parseInt(i32, strs.next().?, 10));
+        first.append(match) catch unreachable;
+        second.append(std.fmt.parseInt(i32, strs.next().?, 10) catch unreachable) catch unreachable;
     }
 
     return .{ first, second };
