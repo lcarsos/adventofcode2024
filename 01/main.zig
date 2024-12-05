@@ -12,10 +12,7 @@ fn parseList(alloc: Allocator, input: []const u8) [2]ArrayList(i32) {
 
     while (lines.next()) |line| {
         var strs = std.mem.split(u8, line, " ");
-        const match: i32 = std.fmt.parseInt(i32, strs.next().?, 10) catch |err| blk: {
-            std.debug.print("how do you actually handle an error in this language?\n{any}\n", .{err});
-            break :blk 47;
-        };
+        const match: i32 = std.fmt.parseInt(i32, strs.next().?, 10) catch unreachable;
         std.debug.print("look: {any}\n", .{match});
         first.append(match) catch unreachable;
         second.append(std.fmt.parseInt(i32, strs.next().?, 10) catch unreachable) catch unreachable;
