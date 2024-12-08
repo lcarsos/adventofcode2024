@@ -2,12 +2,16 @@ const std = @import("std");
 const Allocator = std.mem.Allocator;
 const ArrayList = std.ArrayList;
 
-fn parseList(alloc: Allocator, input: []const u8) [2]ArrayList(i32) {
-    var lines = std.mem.split(u8, input, "\n");
+fn parseList(alloc: Allocator, input: *const std.io.AnyReader) [2]ArrayList(i32) {
+    var line = std.ArrayList(u8).init(alloc);
+    defer line.deinit();
     var first = ArrayList(i32).init(alloc);
     var second = ArrayList(i32).init(alloc);
 
-    while (lines.next()) |line| {
+    const writer = line.writer();
+    while (input.streamUntilDelimiter(writer, '\n', null)) {
+        defer line.clearRetainingCapacity();
+
         var strs = std.mem.split(u8, line, "   ");
         const match: i32 = std.fmt.parseInt(i32, strs.next().?, 10) catch return .{ first, second };
         first.append(match) catch unreachable;
@@ -21,8 +25,13 @@ pub fn main() !void {
     var allocator = std.heap.GeneralPurposeAllocator(.{}){};
     const alloc = allocator.allocator();
 
-    const input: []const u8 = "3   4\n4   3\n2   5\n1   3\n3   9\n3   3\n";
-    const parsed = parseList(alloc, input);
+    const stdin = std.io.getStdIn();
+    var buf_reader = std.io.bufferedReader(stdin.reader());
+    const reader = buf_reader.reader();
+    //const input: []const u8 = "3   4\n4   3\n2   5\n1   3\n3   9\n3   3\n";
+    const parsed = parseList(alloc, reader);
+    defer parsed[0].deinit();
+    defer parsed[1].deinit();
     std.mem.sort(i32, parsed[0].items, {}, std.sort.asc(i32));
     std.mem.sort(i32, parsed[1].items, {}, std.sort.asc(i32));
 
