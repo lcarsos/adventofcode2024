@@ -10,11 +10,9 @@ pub fn parseList(alloc: Allocator, input: std.io.AnyReader) ![2]ArrayList(i32) {
     while (input.readUntilDelimiter(&line_buffer, '\n')) |line| {
         var strs = std.mem.splitSequence(u8, line, "   ");
         const match: i32 = std.fmt.parseInt(i32, strs.next().?, 10) catch return .{ first, second };
-        std.debug.print("look: {any}\n", .{match});
         first.append(match) catch unreachable;
         second.append(std.fmt.parseInt(i32, strs.next().?, 10) catch unreachable) catch unreachable;
-    } else |err| {
-        std.debug.print("foo: {}\n", .{err});
+    } else |_| {
         return .{ first, second };
     }
     unreachable;

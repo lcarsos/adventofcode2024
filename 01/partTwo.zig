@@ -12,19 +12,17 @@ pub fn main() !void {
     const stdin = std.io.getStdIn();
     var buf_reader = std.io.bufferedReader(stdin.reader());
     const parsed = try parseList(alloc, buf_reader.reader().any());
-    dbgPr("{any}\n", .{parsed[0].items});
 
     var count = AutoHashMap(i32, i32).init(alloc);
-    for (parsed[0].items) |x| {
+    for (parsed[1].items) |x| {
         const current = count.get(x) orelse 0;
         try count.put(x, current + 1);
     }
 
-    var keys = count.keyIterator();
-    while (keys.next()) |x| {
-        dbgPr("{d}:{d} ", .{ x.*, count.get(x.*)? });
+    var accum: i32 = 0;
+    for (parsed[0].items) |x| {
+        const multiplicand = count.get(x) orelse 0;
+        accum += x * multiplicand;
     }
-    dbgPr("\n", .{});
-
-    dbgPr("{any}\n", .{count});
+    try std.fmt.format(std.io.getStdOut().writer(), "{}\n", .{accum});
 }
