@@ -7,11 +7,17 @@ pub fn main() !void  {
     //const alloc = arena.allocator();
 
     var table: [4096:0]u8 = undefined;
-    const stdin = std.io.getStdIn();
-    const len = try stdin.reader().read(&table);
-    const slice = table[0..len-1];
+    const reader = std.io.getStdIn().reader();
 
-    dbgPrt("{s}\n", .{ slice, });
+    while (try reader.read(&table)) |len| {
+        const slice = table[0..len-1];
+        dbgPrt("{s}\n", .{ slice, });
+    } else |err| {
+        switch (err) {
+            ReadError.EndOfStream => break
+        }
+    }
+
 
 
 }
