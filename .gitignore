@@ -3,6 +3,7 @@
 main
 partOne
 partTwo
+*.txt
 
 obj
 bin
