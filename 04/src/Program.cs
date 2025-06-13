@@ -1,16 +1,41 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace Advent {
     class Program {
         static int Main(string[] args) {
-            if (args.Length < 1) {
+            if (args.Length < 2) {
                 Console.Error.WriteLine("provide filename as arg 1");
+                Console.Error.WriteLine("provide repetitions as arg 2");
                 return 1;
             }
 
+            int repetitions = Int32.Parse(args[1]);
+
+            List<TimeSpan> timingRuns = new List<TimeSpan>(repetitions);
+
             string[] input = File.ReadAllLines(args[0]);
-            Console.WriteLine($"Length: {input[0].Length}");
-            Console.WriteLine($"3,4: {input[3][4]}");
+            Grid grid = new Grid(input);
+
+            Stopwatch total = new Stopwatch();
+            total.Start();
+            for (int i = 0; i < repetitions; i++) {
+                Stopwatch stopwatch = new Stopwatch();
+                stopwatch.Start();
+                int count = grid.CountMatches("XMAS");
+                stopwatch.Stop();
+                timingRuns.Add(stopwatch.Elapsed);
+            }
+            total.Stop();
+            Console.WriteLine("sorting");
+            timingRuns.Sort();
+            var timingAsNumbers = timingRuns.Select( x => x.TotalMicroseconds );
+            double avg = timingAsNumbers.Average();
+            double expectedTotal = avg * repetitions;
+            double expectedAvg = total.Elapsed.TotalMicroseconds / repetitions;
+            double slopTime = expectedTotal - total.Elapsed.TotalMicroseconds;
+            Console.WriteLine($"Min: {timingRuns[0]}, Median: {timingRuns[repetitions/2]}, Avg: {avg}, Max: {timingRuns[repetitions-1]}");
+            Console.WriteLine($"Expected average time: {expectedAvg}");
             return 0;
         }
     }
@@ -94,17 +119,20 @@ namespace Advent {
         }
 
         public int CountMatches(string toCheck) {
+            Array enumDir = Enum.GetValues(typeof(Direction));
+
             int count = 0;
-            for (int i = 0; i < grid.rows; i++) {
-                for (int j = 0; j < grid.columns; j++) {
-                    foreach (Direction dir in Enum.GetValues(typeof(Direction))) {
+            for (int i = 0; i < rows; i++) {
+                for (int j = 0; j < columns; j++) {
+                    foreach (Direction dir in enumDir) {
                         Point pt = new Point { x = i, y = j };
-                        if (grid.DoesMatch(pt, dir, toCheck)) {
+                        if (DoesMatch(pt, dir, toCheck)) {
                             count += 1;
                         }
                     }
                 }
             }
+            return count;
         }
     }
 }

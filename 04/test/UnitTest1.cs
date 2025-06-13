@@ -79,12 +79,12 @@ public class AdventGridTests
         ]);
         Point stand = new Point { x = 1, y = 1 };
 
-        Assert.Equal(grid.Cell(stand.Move(Direction.N)), 'b');
-        Assert.Equal(grid.Cell(stand.Move(Direction.E)), 'h');
-        Assert.Equal(grid.Cell(stand.Move(Direction.S)), 'l');
-        Assert.Equal(grid.Cell(stand.Move(Direction.W)), 'f');
+        Assert.Equal('b', grid.Cell(stand.Move(Direction.N)));
+        Assert.Equal('h', grid.Cell(stand.Move(Direction.E)));
+        Assert.Equal('l', grid.Cell(stand.Move(Direction.S)));
+        Assert.Equal('f', grid.Cell(stand.Move(Direction.W)));
 
-        Assert.Equal(grid.Cell(stand.Move(Direction.NW)), 'a');
+        Assert.Equal('a', grid.Cell(stand.Move(Direction.NW)));
     }
 
     [Fact]
@@ -104,17 +104,6 @@ public class AdventGridTests
             "MXMXAXMASX",
         ]);
 
-        int count = 0;
-        for (int i = 0; i < grid.rows; i++) {
-            for (int j = 0; j < grid.columns; j++) {
-                foreach (Direction dir in Enum.GetValues(typeof(Direction))) {
-                    Point pt = new Point { x = i, y = j };
-                    if (grid.DoesMatch(pt, dir, toCheck)) {
-                        count += 1;
-                    }
-                }
-            }
-        }
-        Assert.Equal(18, count);
+        Assert.Equal(18, grid.CountMatches(toCheck));
     }
 }
