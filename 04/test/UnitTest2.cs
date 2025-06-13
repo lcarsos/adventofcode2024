@@ -63,10 +63,38 @@ public class AdventMoreIntelligenterGridTests
         string expected = "..SAMXMAS.";
 
         MoreIntelligenterGrid grid = new MoreIntelligenterGrid(haystack);
-        char[] newGrid = grid.TransposeRow(0);
 
-        Assert.Equal(expected, new string(newGrid));
+        string newGrid = grid.TransposeRow(0);
+        Assert.Equal(expected, newGrid);
         newGrid = grid.TransposeRow(1);
-        Assert.Equal("..........", new string(newGrid));
+        Assert.Equal("..........", newGrid);
+    }
+
+    [Fact]
+    public void TestFindingHorizAndVertMatches()
+    {
+        string[] haystack = [
+            ".SMXA.S",
+            "...M..A",
+            ".XMAS.M",
+            "...SAMX",
+        ];
+        MoreIntelligenterGrid grid = new MoreIntelligenterGrid(haystack);
+
+        Assert.Equal(4, grid.Matches("XMAS"));
+
+    [Fact]
+    public void TestFindingHorizAndVertMatches()
+    {
+        string[] haystack = [
+            "X.X..S",
+            ".M.MA.",
+            "..AMA.",
+            "..XS.S",
+        ];
+        MoreIntelligenterGrid grid = new MoreIntelligenterGrid(haystack);
+
+        Assert.Equal(3, grid.Matches("XMAS"));
+    }
     }
 }
