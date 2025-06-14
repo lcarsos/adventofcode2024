@@ -15,27 +15,63 @@ namespace Advent {
             List<TimeSpan> timingRuns = new List<TimeSpan>(repetitions);
 
             string[] input = File.ReadAllLines(args[0]);
-            Grid grid = new Grid(input);
 
-            Stopwatch total = new Stopwatch();
-            total.Start();
-            for (int i = 0; i < repetitions; i++) {
-                Stopwatch stopwatch = new Stopwatch();
-                stopwatch.Start();
-                int count = grid.CountMatches("XMAS");
-                stopwatch.Stop();
-                timingRuns.Add(stopwatch.Elapsed);
+            {
+                Console.WriteLine("TURTLE METHOD");
+                Stopwatch total = new Stopwatch();
+                total.Start();
+
+                for (int i = 0; i < repetitions; i++) {
+                    Stopwatch stopwatch = new Stopwatch();
+                    stopwatch.Start();
+                    TurtleGrid grid = new TurtleGrid(input);
+                    int count = grid.CountMatches("XMAS");
+                    stopwatch.Stop();
+                    timingRuns.Add(stopwatch.Elapsed);
+                    Console.Error.WriteLine(count);
+                }
+                total.Stop();
+                Console.WriteLine("sorting");
+                timingRuns.Sort();
+                var timingAsNumbers = timingRuns.Select( x => x.TotalMicroseconds );
+                double avg = timingAsNumbers.Average();
+                double expectedTotal = avg * repetitions;
+                double expectedAvg = total.Elapsed.TotalMicroseconds / repetitions;
+                double slopTime = expectedTotal - total.Elapsed.TotalMicroseconds;
+                Console.WriteLine($"Min: {timingRuns[0]}, Median: {timingRuns[repetitions/2]}, Avg: {avg}, Max: {timingRuns[repetitions-1]}");
+                Console.WriteLine($"Expected average time: {expectedAvg}");
+                Console.WriteLine($"Total time: {total.Elapsed}");
             }
-            total.Stop();
-            Console.WriteLine("sorting");
-            timingRuns.Sort();
-            var timingAsNumbers = timingRuns.Select( x => x.TotalMicroseconds );
-            double avg = timingAsNumbers.Average();
-            double expectedTotal = avg * repetitions;
-            double expectedAvg = total.Elapsed.TotalMicroseconds / repetitions;
-            double slopTime = expectedTotal - total.Elapsed.TotalMicroseconds;
-            Console.WriteLine($"Min: {timingRuns[0]}, Median: {timingRuns[repetitions/2]}, Avg: {avg}, Max: {timingRuns[repetitions-1]}");
-            Console.WriteLine($"Expected average time: {expectedAvg}");
+
+
+
+            {
+                Console.WriteLine("\n\n\n");
+                Console.WriteLine("MATRIX METHOD");
+                Stopwatch total = new Stopwatch();
+                total.Start();
+
+                for (int i = 0; i < repetitions; i++) {
+                    Stopwatch stopwatch = new Stopwatch();
+                    stopwatch.Start();
+                    MoreIntelligenterGrid grid = new MoreIntelligenterGrid(input);
+                    int count = grid.Matches("XMAS");
+                    stopwatch.Stop();
+                    timingRuns.Add(stopwatch.Elapsed);
+                    Console.Error.WriteLine(count);
+                }
+                total.Stop();
+                Console.WriteLine("sorting");
+                timingRuns.Sort();
+                var timingAsNumbers = timingRuns.Select( x => x.TotalMicroseconds );
+                double avg = timingAsNumbers.Average();
+                double expectedTotal = avg * repetitions;
+                double expectedAvg = total.Elapsed.TotalMicroseconds / repetitions;
+                double slopTime = expectedTotal - total.Elapsed.TotalMicroseconds;
+                Console.WriteLine($"Min: {timingRuns[0]}, Median: {timingRuns[repetitions/2]}, Avg: {avg}, Max: {timingRuns[repetitions-1]}");
+                Console.WriteLine($"Expected average time: {expectedAvg}");
+                Console.WriteLine($"Total time: {total.Elapsed}");
+            }
             return 0;
         }
     }
@@ -72,12 +108,12 @@ namespace Advent {
         };
     }
 
-    public class Grid {
+    public class TurtleGrid {
         private readonly string[] m_grid;
         public int columns { get; }
         public int rows { get; }
 
-        public Grid(string[] grid) {
+        public TurtleGrid(string[] grid) {
             m_grid = grid;
             rows = m_grid.Length;
             columns = m_grid[0].Length;

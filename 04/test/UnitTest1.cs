@@ -13,7 +13,7 @@ public class AdventGridTests
     [Fact]
     public void TestNeighbors()
     {
-        Grid grid = new Grid([
+        TurtleGrid grid = new TurtleGrid([
             "abcde",
             "fghij",
             "klmno",
@@ -30,7 +30,7 @@ public class AdventGridTests
 
         Assert.Equal(new Point { x = 1, y = 2 }, newPt);
 
-        Grid grid = new Grid([
+        TurtleGrid grid = new TurtleGrid([
             ".Sl..",
             "deA..",
             "...M.",
@@ -49,7 +49,7 @@ public class AdventGridTests
     public void CheckWalkForwardTest()
     {
         string toCheck = "XMAS";
-        Grid grid = new Grid([
+        TurtleGrid grid = new TurtleGrid([
             ".XMAS..",
         ]);
 
@@ -59,7 +59,7 @@ public class AdventGridTests
         Assert.False(grid.DoesMatch(new Point { x = 0, y = 2 }, Direction.E, toCheck));
         Assert.False(grid.DoesMatch(new Point { x = 0, y = 1 }, Direction.W, toCheck));
 
-        grid = new Grid([
+        grid = new TurtleGrid([
             ".SA..",
             "deAM.",
             "...MX",
@@ -72,7 +72,7 @@ public class AdventGridTests
     [Fact]
     public void TestMoving()
     {
-        Grid grid = new Grid([
+        TurtleGrid grid = new TurtleGrid([
             "abc",
             "fgh",
             "klm",
@@ -91,7 +91,7 @@ public class AdventGridTests
     public void CountInputStringsTest()
     {
         string toCheck = "XMAS";
-        Grid grid = new Grid([
+        TurtleGrid grid = new TurtleGrid([
             "MMMSXXMASM",
             "MSAMXMSMSA",
             "AMXSXMAAMM",

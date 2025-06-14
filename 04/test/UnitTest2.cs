@@ -71,17 +71,34 @@ public class AdventMoreIntelligenterGridTests
     }
 
     [Fact]
-    public void TestFindingHorizAndVertMatches()
+    public void TestEnsureLDiagonalizationWorks()
     {
         string[] haystack = [
-            ".SMXA.S",
-            "...M..A",
-            ".XMAS.M",
-            "...SAMX",
+            "0ACFI",
+            "BDGJL",
+            "EHKMN",
         ];
         MoreIntelligenterGrid grid = new MoreIntelligenterGrid(haystack);
 
-        Assert.Equal(4, grid.Matches("XMAS"));
+        Assert.Equal("AB", grid.LDiagonal(1));
+        Assert.Equal("IJK", grid.LDiagonal(4));
+        Assert.Equal("LM", grid.LDiagonal(5));
+    }
+
+    [Fact]
+    public void TestEnsureRDiagonalizationWorks()
+    {
+        string[] haystack = [
+            "0ACFI",
+            "BDGJL",
+            "EHKMN",
+        ];
+        MoreIntelligenterGrid grid = new MoreIntelligenterGrid(haystack);
+
+        Assert.Equal("FL", grid.RDiagonal(1));
+        Assert.Equal("0DK", grid.RDiagonal(4));
+        Assert.Equal("BH", grid.RDiagonal(5));
+    }
 
     [Fact]
     public void TestFindingHorizAndVertMatches()
@@ -96,5 +113,24 @@ public class AdventMoreIntelligenterGridTests
 
         Assert.Equal(3, grid.Matches("XMAS"));
     }
+
+    [Fact]
+    public void CountInputStringsTest()
+    {
+        string toCheck = "XMAS";
+        MoreIntelligenterGrid grid = new MoreIntelligenterGrid([
+            "MMMSXXMASM",
+            "MSAMXMSMSA",
+            "AMXSXMAAMM",
+            "MSAMASMSMX",
+            "XMASAMXAMM",
+            "XXAMMXXAMA",
+            "SMSMSASXSS",
+            "SAXAMASAAA",
+            "MAMMMXMMMM",
+            "MXMXAXMASX",
+        ]);
+
+        Assert.Equal(18, grid.Matches(toCheck));
     }
 }
