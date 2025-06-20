@@ -64,4 +64,21 @@ public class Rules
 
         return true;
     }
+
+    public int ComparePages(int lhs, int rhs)
+    {
+        if (!(_Rules.ContainsKey(lhs) && _Rules.ContainsKey(rhs)))
+        {
+            return 0;
+        }
+        if (_Rules[lhs].After.Contains(rhs))
+        {
+            return -1;
+        }
+        if (_Rules[lhs].Before.Contains(rhs))
+        {
+            return 1;
+        }
+        return 0;
+    }
 }

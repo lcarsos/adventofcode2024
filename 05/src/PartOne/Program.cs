@@ -32,4 +32,20 @@ public class Program
             }
         );
     }
+
+    public static int SumMiddleOfUnSorted(Rules rules, string[] corrections)
+    {
+        return corrections
+            .Where(x => !rules.IsSorted(x))
+            .Select(x => {
+                var pages = x.Split(',').Select(Int32.Parse).ToList();
+                pages.Sort(rules.ComparePages);
+                return pages;
+            })
+            .Aggregate(0, (acc, pages) => {
+                var middleIndex = pages.Count / 2;
+                return acc + pages[middleIndex];
+            }
+        );
+    }
 }
