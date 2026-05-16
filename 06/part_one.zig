@@ -3,6 +3,7 @@ const Io = std.Io;
 const Dir = Io.Dir;
 const File = Io.File;
 const Allocator = std.mem.Allocator;
+const Tuple = std.meta.Tuple;
 //const io = @import("io");
 
 const PointArray = std.ArrayList(Point);
@@ -15,6 +16,18 @@ const Point = struct {
         return .{
             .x = x,
             .y = y,
+        };
+    }
+};
+
+const DirectionalPoint = struct {
+    point: Point,
+    direction: Direction,
+
+    pub fn init(x: u32, y: u32, d: Direction) DirectionalPoint {
+        return .{
+            .point = Point.init(x, y),
+            .direction = d
         };
     }
 };
@@ -34,23 +47,50 @@ pub fn read_position(tile: u8) Tile {
     };
 }
 
-const LoadMapTuple = std.meta.Tuple(&.{ PointArray, Point });
+const Direction = enum {
+    north,
+    east,
+    south,
+    west,
+};
 
-pub fn load_map(alloc: Allocator, io: Io, file: File) !LoadMapTuple {
+pub fn read_direction(tile: u8) Direction {
+    return switch(tile) {
+        '^' => .north,
+        '>' => .east,
+        'v' => .south,
+        '<' => .west,
+        else => unreachable,
+    };
+}
+
+pub fn load_map(alloc: Allocator, io: Io, file: File) !Tuple(&.{ PointArray, DirectionalPoint }) {
     var buffer: [1024]u8 = undefined;
     const buf_slice: []u8 = buffer[0..1024];
     var reader = file.reader(io, buf_slice);
 
+    var maybe_guard: ?DirectionalPoint = null;
     var obstacles: PointArray = std.ArrayList(Point).empty;
-    const line = try reader.interface.takeDelimiter('\n') orelse "";
-    for (line, 0..) |col, i| {
-        if (read_position(col) == Tile.obstacle) {
-            try obstacles.append(alloc, Point.init(0, @intCast(i)));
-        }
+    var row: u32 = 0;
+    while (try reader.interface.takeDelimiter('\n')) |line| {
+        for (line, 0..) |col, i| {
+            switch (read_position(col)) {
+                .obstacle => try obstacles.append(alloc, Point.init(row, @intCast(i))),
+                .guard => maybe_guard = DirectionalPoint.init(row, @intCast(i), read_direction(col)),
+                else => {},
+            }
+            if (read_position(col) == Tile.obstacle) {
+                try obstacles.append(alloc, Point.init(0, @intCast(i)));
+            }
 
+        }
+        row += 1;
     }
-    //obstacles.append(alloc, Point.init(0,0));
-    return .{ obstacles, Point.init(0,0) };
+    if (maybe_guard) |guard| {
+        return .{ obstacles, guard };
+    } else {
+        return error.NoGuardInMap;
+    }
 }
 
 pub fn main(init: std.process.Init) !u8 {
@@ -66,18 +106,15 @@ pub fn main(init: std.process.Init) !u8 {
         std.debug.print("failed to open file {s}\n", .{map_file_path,});
         return err;
     };
-    const map_res = try load_map(init.gpa, io, map_file);
-    //const map: PointArray = map_res[0];
-    const guard = map_res[1];
-    //defer init.gpa.free(map.items);
-    //const length = try map_file.readPositionalAll(io, buf_slice, 0);
-    //const content = buffer[0..length];
+    var map: PointArray, const guard: DirectionalPoint = try load_map(init.gpa, io, map_file);
+    defer map.deinit(init.gpa);
 
 
     std.debug.print("arg 1 {s}\n", .{map_file_path,});
     //std.debug.print("read {d} bytes\n", .{length,});
     //std.debug.print("{c}\n", .{content[4],});
     std.debug.print("guard location {any}\n", .{guard});
+    std.debug.print("tile {any}\n", .{map.items[0]});
     return 0;
 }
 
