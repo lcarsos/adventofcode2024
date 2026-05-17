@@ -9,13 +9,13 @@ const Tuple = std.meta.Tuple;
 const PointArray = std.ArrayList(Point);
 
 const Map = struct {
-    row: PointArray,
-    col: PointArray,
+    row: std.ArrayList(PointArray),
+    col: std.ArrayList(PointArray),
 
     pub fn init() Map {
         return .{
-            .row = std.ArrayList(Point).empty,
-            .col = std.ArrayList(Point).empty,
+            .row = std.ArrayList(PointArray).empty,
+            .col = std.ArrayList(PointArray).empty,
         };
     }
 };

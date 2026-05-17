@@ -2,7 +2,9 @@
 *.o
 main
 partOne
+part_one
 partTwo
+part_two
 *.txt
 
 obj
