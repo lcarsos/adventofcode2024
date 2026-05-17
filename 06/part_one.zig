@@ -1,5 +1,6 @@
 const std = @import("std");
 const Io = std.Io;
+const Reader = Io.Reader;
 const Dir = Io.Dir;
 const File = Io.File;
 const Allocator = std.mem.Allocator;
@@ -91,17 +92,12 @@ pub fn read_direction(tile: u8) Direction {
     };
 }
 
-pub fn load_map(alloc: Allocator, io: Io, file: File) !Tuple(&.{ Map, DirectionalPoint }) {
-    var buffer: [1024]u8 = undefined;
-    const buf_slice: []u8 = buffer[0..1024];
-    var reader = file.reader(io, buf_slice);
-
+pub fn load_map(alloc: Allocator, comptime T: type, reader: *T) !Tuple(&.{ Map, DirectionalPoint }) {
     var maybe_guard: ?DirectionalPoint = null;
     var map = Map.init();
     var row: u32 = 0;
     while (try reader.interface.takeDelimiter('\n')) |line| {
         try map.row.append(alloc, ObstacleIdxArray.empty);
-        std.debug.print("there are {d} columns\n", .{ line.len });
         if (row == 0) {
             try map.col.ensureTotalCapacity(alloc, line.len+1);
             for (0..line.len) |_| {
@@ -143,7 +139,10 @@ pub fn main(init: std.process.Init) !u8 {
         std.debug.print("failed to open file {s}\n", .{map_file_path,});
         return err;
     };
-    var map: Map, const guard: DirectionalPoint = try load_map(init.gpa, io, map_file);
+    var buffer: [1024]u8 = undefined;
+    const buf_slice: []u8 = buffer[0..1024];
+    var reader = map_file.reader(io, buf_slice);
+    var map: Map, const guard: DirectionalPoint = try load_map(init.gpa, @TypeOf(reader), &reader);
     defer map.deinit(init.gpa);
 
 
