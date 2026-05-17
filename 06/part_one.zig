@@ -7,16 +7,31 @@ const Tuple = std.meta.Tuple;
 //const io = @import("io");
 
 const PointArray = std.ArrayList(Point);
+const ObstacleIdxArray = std.ArrayList(usize);
 
 const Map = struct {
-    row: std.ArrayList(PointArray),
-    col: std.ArrayList(PointArray),
+    obstacles: PointArray,
+    row: std.ArrayList(ObstacleIdxArray),
+    col: std.ArrayList(ObstacleIdxArray),
 
     pub fn init() Map {
         return .{
-            .row = std.ArrayList(PointArray).empty,
-            .col = std.ArrayList(PointArray).empty,
+            .obstacles = PointArray.empty,
+            .row = std.ArrayList(ObstacleIdxArray).empty,
+            .col = std.ArrayList(ObstacleIdxArray).empty,
         };
+    }
+
+    pub fn deinit(self: *Map, gpa: Allocator) void {
+        self.obstacles.deinit(gpa);
+        for (0..self.row.items.len) |i| {
+            self.row.items[i].deinit(gpa);
+        }
+        for (0..self.col.items.len) |i| {
+            self.col.items[i].deinit(gpa);
+        }
+        self.row.deinit(gpa);
+        self.col.deinit(gpa);
     }
 };
 
@@ -85,12 +100,24 @@ pub fn load_map(alloc: Allocator, io: Io, file: File) !Tuple(&.{ Map, Directiona
     var map = Map.init();
     var row: u32 = 0;
     while (try reader.interface.takeDelimiter('\n')) |line| {
-        for (line, 0..) |col, i| {
-            switch (read_position(col)) {
+        try map.row.append(alloc, ObstacleIdxArray.empty);
+        std.debug.print("there are {d} columns\n", .{ line.len });
+        if (row == 0) {
+            try map.col.ensureTotalCapacity(alloc, line.len+1);
+            for (0..line.len) |_| {
+                map.col.appendAssumeCapacity(ObstacleIdxArray.empty);
+            }
+        }
+        for (line, 0..) |tile, col| {
+            switch (read_position(tile)) {
                 .obstacle => {
-                    try map.row.items[row].append(alloc, Point.init(row, @intCast(i)));
+                    const position = Point.init(row, @intCast(col));
+                    try map.obstacles.append(alloc, position);
+                    const idx = map.obstacles.items.len;
+                    try map.row.items[row].append(alloc, idx);
+                    try map.col.items[col].append(alloc, idx);
                 },
-                .guard => maybe_guard = DirectionalPoint.init(row, @intCast(i), read_direction(col)),
+                .guard => maybe_guard = DirectionalPoint.init(row, @intCast(col), read_direction(tile)),
                 else => {},
             }
         }
@@ -117,15 +144,15 @@ pub fn main(init: std.process.Init) !u8 {
         return err;
     };
     var map: Map, const guard: DirectionalPoint = try load_map(init.gpa, io, map_file);
-    defer map.row.deinit(init.gpa);
-    defer map.col.deinit(init.gpa);
+    defer map.deinit(init.gpa);
 
 
     std.debug.print("arg 1 {s}\n", .{map_file_path,});
     //std.debug.print("read {d} bytes\n", .{length,});
     //std.debug.print("{c}\n", .{content[4],});
     std.debug.print("guard location {any}\n", .{guard});
-    std.debug.print("tile {any}\n", .{map.items[0]});
+    std.debug.print("tile {any}\n", .{map.obstacles.items});
+    std.debug.print("row indexes {any}\n", .{map.row.items});
     return 0;
 }
 
