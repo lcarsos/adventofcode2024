@@ -1,8 +1,8 @@
 const std = @import("std");
 const Io = std.Io;
-const Reader = Io.Reader;
 const Dir = Io.Dir;
 const File = Io.File;
+const Reader = Io.Reader;
 const Allocator = std.mem.Allocator;
 const Tuple = std.meta.Tuple;
 //const io = @import("io");
@@ -92,11 +92,11 @@ pub fn read_direction(tile: u8) Direction {
     };
 }
 
-pub fn load_map(alloc: Allocator, comptime T: type, reader: *T) !Tuple(&.{ Map, DirectionalPoint }) {
+pub fn load_map(alloc: Allocator, reader: *Reader) !Tuple(&.{ Map, DirectionalPoint }) {
     var maybe_guard: ?DirectionalPoint = null;
     var map = Map.init();
     var row: u32 = 0;
-    while (try reader.interface.takeDelimiter('\n')) |line| {
+    while (try reader.takeDelimiter('\n')) |line| {
         try map.row.append(alloc, ObstacleIdxArray.empty);
         if (row == 0) {
             try map.col.ensureTotalCapacity(alloc, line.len+1);
@@ -142,7 +142,7 @@ pub fn main(init: std.process.Init) !u8 {
     var buffer: [1024]u8 = undefined;
     const buf_slice: []u8 = buffer[0..1024];
     var reader = map_file.reader(io, buf_slice);
-    var map: Map, const guard: DirectionalPoint = try load_map(init.gpa, @TypeOf(reader), &reader);
+    var map: Map, const guard: DirectionalPoint = try load_map(init.gpa, &reader.interface);
     defer map.deinit(init.gpa);
 
 
