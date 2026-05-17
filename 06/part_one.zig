@@ -8,6 +8,18 @@ const Tuple = std.meta.Tuple;
 
 const PointArray = std.ArrayList(Point);
 
+const Map = struct {
+    row: PointArray,
+    col: PointArray,
+
+    pub fn init() Map {
+        return .{
+            .row = std.ArrayList(Point).empty,
+            .col = std.ArrayList(Point).empty,
+        };
+    }
+};
+
 const Point = struct {
     x: u32,
     y: u32,
@@ -64,30 +76,28 @@ pub fn read_direction(tile: u8) Direction {
     };
 }
 
-pub fn load_map(alloc: Allocator, io: Io, file: File) !Tuple(&.{ PointArray, DirectionalPoint }) {
+pub fn load_map(alloc: Allocator, io: Io, file: File) !Tuple(&.{ Map, DirectionalPoint }) {
     var buffer: [1024]u8 = undefined;
     const buf_slice: []u8 = buffer[0..1024];
     var reader = file.reader(io, buf_slice);
 
     var maybe_guard: ?DirectionalPoint = null;
-    var obstacles: PointArray = std.ArrayList(Point).empty;
+    var map = Map.init();
     var row: u32 = 0;
     while (try reader.interface.takeDelimiter('\n')) |line| {
         for (line, 0..) |col, i| {
             switch (read_position(col)) {
-                .obstacle => try obstacles.append(alloc, Point.init(row, @intCast(i))),
+                .obstacle => {
+                    try map.row.items[row].append(alloc, Point.init(row, @intCast(i)));
+                },
                 .guard => maybe_guard = DirectionalPoint.init(row, @intCast(i), read_direction(col)),
                 else => {},
             }
-            if (read_position(col) == Tile.obstacle) {
-                try obstacles.append(alloc, Point.init(0, @intCast(i)));
-            }
-
         }
         row += 1;
     }
     if (maybe_guard) |guard| {
-        return .{ obstacles, guard };
+        return .{ map, guard };
     } else {
         return error.NoGuardInMap;
     }
@@ -106,8 +116,9 @@ pub fn main(init: std.process.Init) !u8 {
         std.debug.print("failed to open file {s}\n", .{map_file_path,});
         return err;
     };
-    var map: PointArray, const guard: DirectionalPoint = try load_map(init.gpa, io, map_file);
-    defer map.deinit(init.gpa);
+    var map: Map, const guard: DirectionalPoint = try load_map(init.gpa, io, map_file);
+    defer map.row.deinit(init.gpa);
+    defer map.col.deinit(init.gpa);
 
 
     std.debug.print("arg 1 {s}\n", .{map_file_path,});
