@@ -5,7 +5,6 @@ const File = Io.File;
 const Reader = Io.Reader;
 const Allocator = std.mem.Allocator;
 const Tuple = std.meta.Tuple;
-//const io = @import("io");
 
 const PointArray = std.ArrayList(Point);
 const ObstacleIdxArray = std.ArrayList(usize);
@@ -92,6 +91,20 @@ pub fn read_direction(tile: u8) Direction {
     };
 }
 
+// Takes in a guard position, and returns a steps walked and an ending guard position
+//pub fn walk_in_direction(map: Map, dir: DirectionalPoint) Tuple(&.{ usize, DirectionalPoint }) {
+//    switch (dir.direction) {
+//        .west => {
+//            const after = after: for (map.row.items) |i| {
+//                if (map.obstacles[i].col > dir.y) {
+//                    break :after map.obstacles[i];
+//                }
+//            };
+//            const before = 
+//        },
+//    }
+//}
+
 pub fn load_map(alloc: Allocator, reader: *Reader) !Tuple(&.{ Map, DirectionalPoint }) {
     var maybe_guard: ?DirectionalPoint = null;
     var map = Map.init();
@@ -109,7 +122,7 @@ pub fn load_map(alloc: Allocator, reader: *Reader) !Tuple(&.{ Map, DirectionalPo
                 .obstacle => {
                     const position = Point.init(row, @intCast(col));
                     try map.obstacles.append(alloc, position);
-                    const idx = map.obstacles.items.len;
+                    const idx = map.obstacles.items.len-1;
                     try map.row.items[row].append(alloc, idx);
                     try map.col.items[col].append(alloc, idx);
                 },
@@ -155,5 +168,57 @@ pub fn main(init: std.process.Init) !u8 {
     return 0;
 }
 
-test "test input" {
+test "test map parsing simple line" {
+    const map_string = ".#.....<.";
+    var reader = std.Io.Reader.fixed(map_string);
+    const gpa = std.testing.allocator;
+    //const io = std.testing.io_instance;
+    var map: Map, const guard: DirectionalPoint = try load_map(gpa, &reader);
+    defer map.deinit(gpa);
+
+    try expectEqual(guard, DirectionalPoint.init(0, 7, .west));
+    try expectEqual(map.obstacles.items[0], Point.init(0, 1));
+    try expectEqualSlices(Point, map.obstacles.items, &.{Point.init(0,1)});
+    try expectEqualSlices(usize, map.row.items[0].items, &.{0});
+    try expectEqualDeep(map.obstacles.items[ map.row.items[ guard.point.x ].items[0] ], Point.init(0, 1));
+    try expectEqualDeep(map.obstacles.items[ map.col.items[ 1 ].items[0] ], Point.init(0, 1));
 }
+
+test "empty rows" {
+    const map_string =
+        \\..#.#....
+        \\.........
+        \\..##..<#.
+    ;
+    var reader = std.Io.Reader.fixed(map_string);
+    const gpa = std.testing.allocator;
+    var map: Map, const guard: DirectionalPoint = try load_map(gpa, &reader);
+    defer map.deinit(gpa);
+
+    try expectEqual(guard, DirectionalPoint.init(2, 6, .west));
+    try expectEqual(map.row.items[0].items.len, 2);
+    try expectEqual(map.row.items[1].items.len, 0);
+    try expectEqual(map.row.items[2].items.len, 3);
+    try expectEqual(map.col.items[0].items.len, 0);
+    try expectEqual(map.col.items[1].items.len, 0);
+    try expectEqual(map.col.items[2].items.len, 2);
+    std.debug.print("row 0: ", .{});
+    for (map.row.items[0].items) |i| {
+        std.debug.print("{d}, ", .{i});
+    }
+    std.debug.print("\n", .{});
+    std.debug.print("row 2: ", .{});
+    for (map.row.items[2].items) |i| {
+        std.debug.print("{d}, ", .{i});
+    }
+    std.debug.print("\n", .{});
+    std.debug.print("col 2: ", .{});
+    for (map.col.items[2].items, 0..) |_, i| {
+        std.debug.print("{d}, ", .{i});
+    }
+    std.debug.print("\n", .{});
+}
+
+const expectEqual = std.testing.expectEqual;
+const expectEqualSlices = std.testing.expectEqualSlices;
+const expectEqualDeep = std.testing.expectEqualDeep;
